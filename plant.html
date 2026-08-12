@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgriVision AI - Plant Disease Detection Hub</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      /* Main Green Theme Color */
+      --primary: #2e7d32; /* Rich Green Leaf Color */
+      --primary-light: #e8f5e9; /* Super Light Green for backgrounds */
+      --primary-hover: #1b5e20; /* Darker green for hover */
+      
+      /* New Clean Background Colors */
+      --bg-main: #ffffff; /* Pure White Background */
+      --bg-card: #f9fbf9; /* Very faint green/grey for cards */
+      --border-card: #e0eee0; /* Soft green-tinted borders */
+      
+      /* Text Colors */
+      --text-main: #1a1c1a; /* Almost black */
+      --text-muted: #5f635f; /* Grey text */
+      --text-on-primary: #ffffff;
+      
+      /* Status Colors */
+      --danger: #d32f2f;
+      --danger-bg: #ffebee;
+      --warning: #fbc02d;
+      --warning-bg: #fffde7;
+      --success: #388e3c;
+      --success-bg: #e8f5e9;
+      
+      /* Design Elements */
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+      --shadow-md: 0 10px 25px rgba(46, 125, 50, 0.08);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* --- Header & Branding --- */
+    header {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      padding: 1rem 1.5rem;
+      border-radius: var(--radius-lg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      color: var(--primary); /* Green Icon */
+      font-size: 2rem;
+    }
+
+    .brand h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .brand p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .engine-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid var(--border-card);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--primary); /* Green Dot */
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* --- Main App Grid --- */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .app-grid { grid-template-columns: 1fr; }
+    }
+
+    /* --- Widgets/Cards Styling --- */
+    .widget {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .widget:hover {
+      box-shadow: var(--shadow-md);
+      border-color: #c8e6c9; /* Slight green tint on hover */
+    }
+
+    .widget-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary); /* Green Title */
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    /* --- Upload Panel UI --- */
+    .drop-zone {
+      border: 2px dashed #a5d6a7; /* Soft green dashed border */
+      border-radius: var(--radius-md);
+      padding: 2.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: #ffffff;
+    }
+
+    .drop-zone:hover {
+      background-color: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .drop-zone i {
+      font-size: 3rem;
+      color: var(--primary); /* Green Icon */
+      margin-bottom: 0.75rem;
+    }
+
+    .drop-zone p { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+    .drop-zone span { font-size: 0.8rem; color: var(--text-muted); }
+
+    #fileInput { display: none; }
+
+    /* Preview & Scanner Box */
+    .preview-container {
+      margin-top: 1rem;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .preview-box {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      background: #f0f0f0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border-card);
+    }
+
+    .preview-box img {
+      width: 100%; height: 100%; object-fit: contain;
+    }
+
+    .scan-line {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 3px;
+      background: var(--primary); /* Green Scan Line */
+      box-shadow: 0 0 10px var(--primary);
+      display: none;
+      animation: scan 1.5s linear infinite;
+    }
+
+    @keyframes scan { 0%, 100% { top: 5%; } 50% { top: 95%; } }
+
+    /* Button Styling */
+    .btn-action {
+      width: 100%;
+      background-color: var(--primary); /* Green Button */
+      color: var(--text-on-primary);
+      border: none;
+      padding: 0.8rem;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      transition: var(--transition);
+    }
+
+    .btn-action:hover { background-color: var(--primary-hover); }
+    .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* --- Demo Presets UI --- */
+    .demo-section {
+      margin-top: 1.25rem;
+      border-top: 1px solid var(--border-card);
+      padding-top: 1rem;
+    }
+
+    .demo-section p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.6rem; }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    .demo-card {
+      border-radius: 8px; overflow: hidden;
+      border: 2px solid transparent; cursor: pointer; transition: var(--transition);
+      aspect-ratio: 1;
+    }
+
+    .demo-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+    .demo-card img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* --- Results Panel UI --- */
+    .results-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; text-align: center; color: var(--text-muted); padding: 3rem 0;
+    }
+
+    .results-placeholder i { font-size: 3.5rem; color: #c8e6c9; margin-bottom: 1rem; }
+
+    .results-content { display: none; flex-direction: column; gap: 1rem; }
+
+    /* Diagnosis Status Banner */
+    .diagnosis-header {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .diagnosis-header.infected { background-color: var(--danger-bg); border: 1px solid #ffcdd2; }
+    .diagnosis-header.healthy { background-color: var(--success-bg); border: 1px solid #c8e6c9; }
+
+    .diag-title { font-weight: 800; font-size: 1.1rem; }
+    .diag-status { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+
+    .confidence-score {
+      font-size: 0.8rem; font-weight: 600; text-align: right;
+      padding: 0.4rem 0.75rem; background: rgba(255,255,255,0.7); border-radius: 8px;
+    }
+
+    /* Detail Boxes (Cure/Caution) */
+    .detail-box {
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      border: 1px solid var(--border-card);
+    }
+
+    .detail-box h4 {
+      font-size: 0.9rem; font-weight: 700; margin-bottom: 0.6rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+
+    .detail-box.caution { background-color: var(--warning-bg); border-color: #fff9c4; color: #827717; }
+    .detail-box.cure { background-color: #f1f8e9; border-color: #dcedc8; color: var(--primary-hover); }
+
+    .detail-box ul {
+      list-style-type: none; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.3rem;
+    }
+
+    .detail-box ul li { display: flex; gap: 0.4rem; align-items: flex-start; }
+    .detail-box ul li::before { content: "•"; color: currentColor; font-weight: bold; }
+
+    /* --- Footer --- */
+    footer {
+      text-align: center; padding-top: 1rem; margin-top: 1rem;
+      font-size: 0.8rem; color: var(--text-muted);
+      border-top: 1px solid var(--border-card);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <i class="fa-solid fa-leaf brand-icon"></i>
+        <div>
+          <h1>AgriVision AI</h1>
+          <p>Leaf Disease Pathology Hub</p>
+        </div>
+      </div>
+      <div class="engine-status">
+        <div class="status-dot"></div> AI Core Online
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="app-grid">
+      
+      <!-- Panel 1: Input -->
+      <div class="widget">
+        <div class="widget-title"><i class="fa-solid fa-camera"></i> Analyze Leaf Sample</div>
+        
+        <!-- Upload Drop Zone -->
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <p>Tap to upload or drag & drop</p>
+          <span>Leaf image (PNG, JPG, JPEG)</span>
+          <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <!-- Preview Area (Hidden by default) -->
+        <div class="preview-container" id="previewContainer">
+          <div class="preview-box">
+            <img id="previewImage" src="#" alt="Leaf Preview">
+            <div class="scan-line" id="scanLine"></div>
+          </div>
+          <button class="btn-action" id="analyzeBtn" onclick="runAI()">
+            <i class="fa-solid fa-microscope"></i> Run Diagnosis
+          </button>
+        </div>
+
+        <!-- Demo Presets -->
+        <div class="demo-section">
+          <p>Quick Test: Select a demo leaf</p>
+          <div class="demo-grid">
+            <div class="demo-card" onclick="loadDemo('late_blight')" title="Tomato Late Blight">
+              <img src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcRCKBORjzVD3W5afqvivbZuGZ59uHPriTQyt5bPs5RGNMUvO2sZ7KaK4JX6OFyRrujw5X4NWk1h9QT8Nzk" alt="Blight">
+            </div>
+            <div class="demo-card" onclick="loadDemo('apple_scab')" title="Apple Scab">
+              <img src="https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcRMel4gfVVo_MyWwOj0Pga-8aekfHdn6zNLB1hwZ3i53mOZ5tsBHI96Y3c5h0WPH0EMFWQVRvJ1DxNfnRQ" alt="Scab">
+            </div>
+            <div class="demo-card" onclick="loadDemo('corn_rust')" title="Corn Rust">
+              <img src="https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcQMBdcm9rYN1eKJEVmpFPrMxCQsQMN8R_rAjKY766ITLRlMJJigkfSShnOKVfRlJt84vNAM01D0D9Xlbn0" alt="Rust">
+            </div>
+            <div class="demo-card" onclick="loadDemo('healthy')" title="Healthy Leaf">
+              <img src="https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcRrn4rmidC44Rnid6sCVEyHN1VY5JlkuP60KYu9Vztr2TmGrHaVPvqwtQ6PIqenXej-tvwVmVLIHYBi8Vfs" alt="Healthy">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Results -->
+      <div class="widget">
+        <div class="widget-title"><i class="fa-solid fa-chart-bar"></i> Diagnostic Output</div>
+        
+        <!-- Placeholder -->
+        <div class="results-placeholder" id="resultsPlaceholder">
+          <i class="fa-solid fa-robot"></i>
+          <p>Waiting for sample...</p>
+          <span style="font-size:0.8rem">Upload a leaf image to receive an AI pathology report.</span>
+        </div>
+
+        <!-- Result Content (Hidden) -->
+        <div class="results-content" id="resultsContent">
+          
+          <!-- Banner -->
+          <div class="diagnosis-header" id="diagHeader">
+            <div>
+              <div class="diag-title" id="diagTitle">Late Blight Detected</div>
+              <div class="diag-status" id="diagStatus">Type: Fungal Pathogen</div>
+            </div>
+            <div class="confidence-score">
+              AI Confidence<br>
+              <strong style="color: var(--primary); font-size: 1.1rem;" id="diagConfidence">98.5%</strong>
+            </div>
+          </div>
+
+          <!-- Caution -->
+          <div class="detail-box caution">
+            <h4><i class="fa-solid fa-triangle-exclamation"></i> Risks & Warnings</h4>
+            <ul id="cautionList"></ul>
+          </div>
+
+          <!-- Cure -->
+          <div class="detail-box cure">
+            <h4><i class="fa-solid fa-kit-medical"></i> Action Plan & Cures</h4>
+            <ul id="cureList"></ul>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      AgriVision Protocol v1.2 &bullet; Client-Side Neural Net Prototype
+    </footer>
+  </div>
+
+  <script>
+    // --- Dummy Data Database ---
+    const pathologyDB = {
+      late_blight: {
+        title: "Tomato: Late Blight",
+        status: "Infected (Oomycete Pathogen)",
+        healthy: false,
+        confidence: "98.7%",
+        cautions: ["Spreads rapidly in humid conditions.", "Can destroy crop in days.", "Wind-borne spores."],
+        cures: ["Remove infected foliage immediately.", "Apply copper-based fungicide.", "Improve air circulation."]
+      },
+      apple_scab: {
+        title: "Apple: Scab",
+        status: "Infected (Ascomycete Fungus)",
+        healthy: false,
+        confidence: "95.1%",
+        cautions: ["Causes leaf drop.", "Defaces fruit, making it unmarketable.", "Overwinters in fallen leaves."],
+        cures: ["Prune tree canopy.", "Apply sulfur or preventative fungicides.", "Rake and destroy fallen leaves."]
+      },
+      corn_rust: {
+        title: "Corn: Common Rust",
+        status: "Infected (Puccinia Fungus)",
+        healthy: false,
+        confidence: "96.4%",
+        cautions: ["Reduces photosynthetic area.", "Tissues turn chlorotic.", "High humidity favors spread."],
+        cures: ["Plant resistant hybrids.", "Apply strobilurin or triazole fungicides.", "Monitor nutrient balance."]
+      },
+      healthy: {
+        title: "Soybean: Healthy",
+        status: "Optimal Condition",
+        healthy: true,
+        confidence: "99.2%",
+        cautions: ["No symptoms detected.", "Maintain standard monitoring.", "Ensure balanced nutrition."],
+        cures: ["Regular watering schedule.", "Organic mulching.", "Routine inspections."]
+      }
+    };
+
+    let currentDiagnosisKey = null;
+
+    // --- UI Interactions ---
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const scanLine = document.getElementById('scanLine');
+
+    // Handle File Upload
+    fileInput.addEventListener('change', (e) => { if(e.target.files.length) handleFile(e.target.files[0]); });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+        showPreview();
+        // Assign random diagnosis for uploaded file
+        const keys = ['late_blight', 'apple_scab', 'corn_rust', 'healthy'];
+        currentDiagnosisKey = keys[Math.floor(Math.random() * keys.length)];
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Handle Demo Selection
+    function loadDemo(key) {
+      currentDiagnosisKey = key;
+      const demoImages = {
+        late_blight: "https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcRCKBORjzVD3W5afqvivbZuGZ59uHPriTQyt5bPs5RGNMUvO2sZ7KaK4JX6OFyRrujw5X4NWk1h9QT8Nzk",
+        apple_scab: "https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcRMel4gfVVo_MyWwOj0Pga-8aekfHdn6zNLB1hwZ3i53mOZ5tsBHI96Y3c5h0WPH0EMFWQVRvJ1DxNfnRQ",
+        corn_rust: "https://encrypted-tbn2.gstatic.com/licensed-image?q=tbn:ANd9GcQMBdcm9rYN1eKJEVmpFPrMxCQsQMN8R_rAjKY766ITLRlMJJigkfSShnOKVfRlJt84vNAM01D0D9Xlbn0",
+        healthy: "https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcRrn4rmidC44Rnid6sCVEyHN1VY5JlkuP60KYu9Vztr2TmGrHaVPvqwtQ6PIqenXej-tvwVmVLIHYBi8Vfs"
+      };
+      previewImage.src = demoImages[key];
+      showPreview();
+    }
+
+    function showPreview() {
+      dropZone.style.display = 'none';
+      previewContainer.style.display = 'flex';
+      hideResults();
+    }
+
+    // --- AI Simulation ---
+    function runAI() {
+      if (!currentDiagnosisKey) return;
+      
+      // UI Update: Scanning start
+      analyzeBtn.disabled = true;
+      analyzeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Reading Patches...`;
+      scanLine.style.display = 'block';
+      hideResults();
+
+      // Simulate network/processing delay
+      setTimeout(() => {
+        scanLine.style.display = 'none';
+        analyzeBtn.disabled = false;
+        analyzeBtn.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Re-Analyze`;
+        
+        displayResults(pathologyDB[currentDiagnosisKey]);
+      }, 2000);
+    }
+
+    function displayResults(data) {
+      document.getElementById('resultsPlaceholder').style.display = 'none';
+      const content = document.getElementById('resultsContent');
+      content.style.display = 'flex';
+
+      // Header Banner
+      const header = document.getElementById('diagHeader');
+      header.className = `diagnosis-header ${data.healthy ? 'healthy' : 'infected'}`;
+      
+      document.getElementById('diagTitle').textContent = data.title;
+      document.getElementById('diagStatus').textContent = `Classification: ${data.status}`;
+      document.getElementById('diagConfidence').textContent = data.confidence;
+
+      // Lists
+      populateList('cautionList', data.cautions);
+      populateList('cureList', data.cures);
+    }
+
+    function populateList(listId, items) {
+      const listEl = document.getElementById(listId);
+      listEl.innerHTML = '';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        listEl.appendChild(li);
+      });
+    }
+
+    function hideResults() {
+      document.getElementById('resultsPlaceholder').style.display = 'flex';
+      document.getElementById('resultsContent').style.display = 'none';
+    }
+
+    // Drag & Drop event handlers
+    ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, prev, false));
+    ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, prev, false));
+    function prev(e) { e.preventDefault(); e.stopPropagation(); }
+    dropZone.addEventListener('drop', (e) => { handleFile(e.dataTransfer.files[0]); });
+  </script>
+</body>
+</html>
